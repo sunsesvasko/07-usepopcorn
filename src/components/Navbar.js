@@ -1,11 +1,11 @@
 import { useState } from "react";
 
-export default function Navbar({ movies }) {
+export function Navbar({ children }) {
   return (
     <nav className="nav-bar">
       <Logo />
-      <Search />
-      <NumResults movies={movies} />
+
+      {children}
     </nav>
   );
 }
@@ -19,7 +19,7 @@ function Logo() {
   );
 }
 
-function Search() {
+export function Search() {
   const [query, setQuery] = useState("");
   return (
     <input
@@ -32,7 +32,7 @@ function Search() {
   );
 }
 
-function NumResults({ movies }) {
+export function NumResults({ movies }) {
   return (
     <p className="num-results">
       Found <strong>{movies.length}</strong> results

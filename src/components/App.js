@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import Navbar from "./Navbar";
+import { Navbar, Search, NumResults } from "./Navbar";
 import MovieList from "./MovieList";
 import Summary from "./Summary";
 import WatchedMovies from "./WatchedMovies";
@@ -61,22 +61,25 @@ export default function App() {
 
   return (
     <>
-      <Navbar movies={movies} />
-      <Main movies={movies} />
+      <Navbar>
+        <Search />
+        <NumResults movies={movies} />
+      </Navbar>
+      <Main>
+        <MovieBox>
+          <MovieList movies={movies}></MovieList>
+        </MovieBox>
+        <WatchedBox></WatchedBox>
+      </Main>
     </>
   );
 }
 
-function Main({ movies }) {
-  return (
-    <main className="main">
-      <MovieBox movies={movies}></MovieBox>
-      <WatchedBox></WatchedBox>
-    </main>
-  );
+function Main({ children }) {
+  return <main className="main">{children}</main>;
 }
 
-function MovieBox({ movies }) {
+function MovieBox({ children }) {
   const [isOpen1, setIsOpen1] = useState(true);
 
   return (
@@ -84,7 +87,7 @@ function MovieBox({ movies }) {
       <ToggleBtn onClick={() => setIsOpen1((open) => !open)}>
         {isOpen1 ? "–" : "+"}
       </ToggleBtn>
-      {isOpen1 && <MovieList movies={movies} />}
+      {isOpen1 && children}
     </div>
   );
 }
