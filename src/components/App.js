@@ -67,13 +67,13 @@ export default function App() {
         <NumResults movies={movies} />
       </Navbar>
       <Main>
-        <MovieBox>
+        <Box>
           <MovieList movies={movies}></MovieList>
-        </MovieBox>
-        <MovieBox>
+        </Box>
+        <Box>
           <Summary watched={watched} average={average} />
           <WatchedMovies watched={watched} average={average} />
-        </MovieBox>
+        </Box>
       </Main>
     </>
   );
@@ -83,7 +83,7 @@ function Main({ children }) {
   return <main className="main">{children}</main>;
 }
 
-function MovieBox({ children }) {
+function Box({ children }) {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
