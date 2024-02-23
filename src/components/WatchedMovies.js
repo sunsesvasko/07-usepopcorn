@@ -1,4 +1,4 @@
-export default function WatchedMovies({ watched, average }) {
+export default function WatchedMovies({ watched, onDeleteWatched }) {
   return (
     <ul className="list">
       {watched.map((movie) => (
@@ -18,6 +18,12 @@ export default function WatchedMovies({ watched, average }) {
               <span>⏳</span>
               <span>{movie.runtime} min</span>
             </p>
+            <button
+              className="btn-delete"
+              onClick={() => onDeleteWatched(movie.imdbID)}
+            >
+              X
+            </button>
           </div>
         </li>
       ))}
