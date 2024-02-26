@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Navbar, Search, NumResults } from "./Navbar";
 import MovieList from "./MovieList";
@@ -6,26 +6,27 @@ import Summary from "./Summary";
 import WatchedMovies from "./WatchedMovies";
 import ToggleBtn from "./ToggleBtn";
 import StarRating from "./StarRating";
+import { useMovies } from "../hooks/useMovies";
+import { useLocalStorageState } from "../hooks/useLocalStorageState";
+import { useKey } from "../hooks/useKey";
+
+const KEY = "d681b9ca";
 
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
-const KEY = "d681b9ca";
-
 export default function App() {
-  const [movies, setMovies] = useState([]);
-  // const [watched, setWatched] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(null);
-
-  const [watched, setWatched] = useState(() =>
-    JSON.parse(localStorage.getItem("watched"))
-  );
+  const { movies, isLoading, error } = useMovies(query);
+  const [watched, setWatched] = useLocalStorageState([], "watched");
 
   const handleSelectMovie = (id) => {
     setSelectedId((curId) => (curId === id ? (curId = null) : (curId = id)));
+  };
+
+  const handleCloseMovie = () => {
+    setSelectedId(null);
   };
 
   const handleAddWatch = (movie) => {
@@ -35,47 +36,6 @@ export default function App() {
   const handleDeleteWatched = (id) => {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   };
-
-  useEffect(() => {
-    localStorage.setItem("watched", JSON.stringify(watched));
-  }, [watched]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function fetchMovies() {
-      try {
-        setIsLoading(true);
-        setError("");
-        const res = await fetch(
-          `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
-          { signal: controller.signal }
-        );
-        if (!res.ok)
-          throw new Error("Something went wrong with fetching movies");
-        const data = await res.json();
-        if (data.Response === "False") throw new Error("Movie not found");
-        setMovies(data.Search);
-        setError("");
-      } catch (err) {
-        if (err.name !== "AbortError") setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    if (query.length < 3) {
-      setMovies([]);
-      setError("");
-      return;
-    }
-    setSelectedId(null);
-    fetchMovies();
-
-    return function () {
-      controller.abort();
-    };
-  }, [query]);
 
   return (
     <>
@@ -97,10 +57,9 @@ export default function App() {
           {selectedId ? (
             <MovieDetails
               selectedId={selectedId}
-              onCloseMovie={setSelectedId}
+              onCloseMovie={handleCloseMovie}
               onAddWatched={handleAddWatch}
               watchedMovies={watched}
-              setSelectedId={setSelectedId}
             ></MovieDetails>
           ) : (
             <>
@@ -139,11 +98,11 @@ function MovieDetails({
   onCloseMovie,
   onAddWatched,
   watchedMovies,
-  setSelectedId,
 }) {
   const [movie, setMovie] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [userRating, setRating] = useState(0);
+  const [userRating, setRating] = useState("");
+  const countRef = useRef(0);
 
   const {
     Title: title,
@@ -171,10 +130,17 @@ function MovieDetails({
       runtime: Number(runtime.split(" ").at(0)) || 0,
       imdbRating: Number(imdbRating),
       userRating: userRating,
+      countRatingDecisions: countRef.current,
     };
     onAddWatched(newMovie);
     onCloseMovie((id) => (id = null));
   };
+
+  useKey("Escape", onCloseMovie);
+
+  useEffect(() => {
+    if (userRating) countRef.current++;
+  }, [userRating]);
 
   useEffect(() => {
     async function getMovieDetails() {
@@ -201,20 +167,6 @@ function MovieDetails({
       document.title = "usePopcorn";
     };
   }, [title]);
-
-  useEffect(() => {
-    const callback = (e) => {
-      if (e.code === "Escape") {
-        setSelectedId(null);
-      }
-    };
-
-    document.addEventListener("keydown", callback);
-
-    return function () {
-      document.removeEventListener("keydown", callback);
-    };
-  }, [setSelectedId]);
 
   return (
     <div className="details">
